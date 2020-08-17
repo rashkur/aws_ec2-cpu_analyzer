@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+
+import boto3
+from colorama import init, deinit, Fore, Back, Style
+
+regions = ('eu-west-1', 'ap-southeast-1', 'us-west-1', 'ap-southeast-2')
+    for region in regions:
+        ec2 = boto3.client("ec2", region_name=region)
+        instance_list = ec2.describe_instances()
+        for reservation in instance_list["Reservations"]:
+            for instance in reservation.get("Instances", []):
+               instance_state = instance["State"]["Name"]
+               launch_time = instance["LaunchTime"]
+                launch_time_friendly = launch_time.strftime("%B %d %Y")
+                ec2info[instance["InstanceId"]] = {
+                  "Instance ID": instance["InstanceId"],
+                  "Type": instance["InstanceType"],
+                  "State": instance_state,
+                  "Private IP": instance["PrivateIpAddress"],
+                  "Public IP": instance["PublicIpAddress"],
+                  "Region": instance["Placement"]["AvailabilityZone"][:-2],
+                  "Availability Zone": instance["Placement"]["AvailabilityZone"],
+                  "Launch Time": launch_time_friendly,
+                }
+
+for instance_id, instance in ec2info.items():
+    print(Fore.RESET + "-------------------------------------")
+    for key in [
+        "Instance ID",
+        "Type",
+        "State",
+        "Private IP",
+        "Public IP",
+        "Region",
+        "Availability Zone",
+        "Launch Time",
+    ]:
+        print(Fore.CYAN + "{0}: {1}".format(key, instance.get(key)))
+    print(Fore.RESET + "-------------------------------------")
